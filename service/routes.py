@@ -98,6 +98,17 @@ def create_products():
 # L I S T   A L L   P R O D U C T S
 ######################################################################
 
+@app.route("/products", methods=["GET"])
+def list_products():
+    """Returns a list of Products"""
+    app.logger.info("Request to list Products...")
+
+    products = Product.all()
+
+    results = [product.serialize() for product in products]
+    app.logger.info("[%s] Products returned", len(results))
+    return results, status.HTTP_200_OK
+
 #
 # PLACE YOUR CODE TO LIST ALL PRODUCTS HERE
 #
