@@ -118,39 +118,33 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(found_product.description, product.description)
         self.assertEqual(found_product.price, product.price)
 
-    def test_update_product(self):
-        """It should Update an existing Product"""
-        # create a product to update
-        test_product = ProductFactory()
-        response = self.client.post(BASE_URL, json=test_product.serialize())
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+    def test_update_a_product(self):
+        """It should Update a Product"""
+        product = ProductFactory()
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        # Change it and update it
+        product.description = "testing"
+        original_id = product.id
+        product.update()
+        self.assertEqual(product.id, original_id)
+        self.assertEqual(product.description, "testing")
+        # Fetch it back and make sure the id hasn't changed
+        # but the data did change
+        products = Product.all()
+        self.assertEqual(len(products), 1)
+        self.assertEqual(products[0].id, original_id)
+        self.assertEqual(products[0].description, "testing")
 
-        # update the product
-        new_product = response.get_json()
-        new_product["description"] = "unknown"
-        response = self.client.put(f"{BASE_URL}/{new_product['id']}", json=new_product)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        updated_product = response.get_json()
-        self.assertEqual(updated_product["description"], "unknown")
-
-    
-    ######################################################################
-    # DELETE A PRODUCT
-    ######################################################################
-    @app.route("/products/<int:product_id>", methods=["DELETE"])
-    def delete_products(product_id):
-        """
-        Delete a Product
-
-        This endpoint will delete a Product based the id specified in the path
-        """
-        app.logger.info("Request to Delete a product with id [%s]", product_id)
-
-        product = Product.find(product_id)
-        if product:
-            product.delete()
-
-        return "", status.HTTP_204_NO_CONTENT
+    def test_delete_a_product(self):
+        """It should Delete a Product"""
+        product = ProductFactory()
+        product.create()
+        self.assertEqual(len(Product.all()), 1)
+        # delete the product and make sure it isn't in the database
+        product.delete()
+        self.assertEqual(len(Product.all()), 0)
 
 
     def test_list_all_products(self):
